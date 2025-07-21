@@ -1,0 +1,30 @@
+2025-07-21 11:55:18 - [INFO] - scoretune - Logger initialized successfully.
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=128, NL=2 → mean score=0.75168092 and error=0.00425935
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=32, NL=1 → mean score=0.76253615 and error=0.00115106
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=128, NL=4 → mean score=0.75639646 and error=0.00107156
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=64, NL=1 → mean score=0.76339992 and error=0.00092401
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=128, NL=1 → mean score=0.76533752 and error=0.00184364
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=32, NL=2 → mean score=0.76129889 and error=0.00117107
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=32, NL=2 → mean score=0.76055191 and error=0.00293544
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=64, NL=4 → mean score=0.75894112 and error=0.00222864
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=64, NL=4 → mean score=0.761579 and error=0.00169386
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=32, NL=4 → mean score=0.75833406 and error=0.0019226
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=128, NL=1 → mean score=0.76354001 and error=0.00140386
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=32, NL=4 → mean score=0.7605985 and error=0.00229776
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=64, NL=2 → mean score=0.76195259 and error=0.00115142
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=64, NL=2 → mean score=0.75873092 and error=0.00149475
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=128, NL=4 → mean score=0.75567265 and error=0.00487387
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=32, NL=1 → mean score=0.76384347 and error=0.00084971
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=32, NL=1 → mean score=0.76218602 and error=0.00214013
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=128, NL=2 → mean score=0.7623728 and error=0.00151942
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=64, NL=1 → mean score=0.76260622 and error=0.00260188
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=64, NL=1 → mean score=0.76272297 and error=0.00123665
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=32, NL=2 → mean score=0.76223272 and error=0.00200764
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=32, HU=128, NL=1 → mean score=0.75698018 and error=0.00653759
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=128, NL=4 → mean score=0.76071528 and error=0.00069421
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=64, NL=4 → mean score=0.7624194 and error=0.00181697
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=32, NL=4 → mean score=0.75957136 and error=0.00208447
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=128, HU=128, NL=2 → mean score=0.76372676 and error=0.00058192
+2025-07-21 11:55:18 - [INFO] - scoretune - BS=64, HU=64, NL=2 → mean score=0.75854416 and error=0.0015691
+2025-07-21 11:55:19 - [INFO] - scoretune -  Highest Score: 0.76533752
+2025-07-21 11:55:19 - [INFO] - scoretune -  Best Params: ('BS=128', 'HU=128'), NL=1

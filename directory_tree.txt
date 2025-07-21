@@ -1,0 +1,44 @@
+.
+├── __init__.py
+├── bond_stats
+├── directory_tree.txt
+├── files
+│   ├── bond_stats
+│   ├── logs
+│   │   ├── dnn
+│   │   ├── dnn_hypertune.txt
+│   │   ├── feature.txt
+│   │   ├── plotting.txt
+│   │   └── processin.txt
+│   ├── MLHypertune_pars
+│   │   ├── DNN_hypertune.txt
+│   │   └── npzfiles
+│   ├── models
+│   │   └── MLHypertune_pars
+│   └── structures_dict.json
+├── logs
+│   └── bond_stats
+├── scripts
+│   ├── bond_structure.sh
+│   ├── dnn_hypertunes.sh
+│   ├── mp_jobs.sh
+│   ├── multiprocessing_hypertune.py
+│   └── rundnn_hypertunes.sh
+├── test
+│   ├── classification_hyperpars.py
+│   ├── classification.py
+│   ├── data.py
+│   ├── dnn_schematic.py
+│   ├── hyperparameters_cvscores.py
+│   ├── pdp_dnnresults.py
+│   ├── plotting.py
+│   └── ScoreHyperpars_auc.py
+└── thermo_stability
+    ├── __init__.py
+    ├── config.py
+    ├── creds.py
+    ├── feature.py
+    ├── processing.py
+    └── utils.py
+
+15 directories, 27 files

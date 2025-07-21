@@ -1,0 +1,14 @@
+extra/
+files/bond_stats
+files/logs
+files/models
+files/df_bond_stats.csv
+files/df_combined.csv
+files/df_datasplit.csv
+files/df_fractions.csv
+files/df.csv
+files/npz_datasplits.npz
+files/pdp_results_average.npz
+files/pdp_results_average.pkl
+files/structures_dict.json
+thermo_stability/creds.py

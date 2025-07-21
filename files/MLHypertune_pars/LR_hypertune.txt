@@ -1,0 +1,3 @@
+LR Best Score: 0.847929 using {'C': 100, 'max_iter': 100, 'penalty': 'l2'}
+LR Best Score: 0.839390 using {'C': 100, 'max_iter': 100, 'penalty': 'l2'}
+LR Best Score: 0.847929 using {'C': 100, 'max_iter': 500, 'penalty': 'l2'}
