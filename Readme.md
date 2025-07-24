@@ -21,7 +21,7 @@ The ML features used in this study are classified into two categories:
 
 **Split datasets** to train, validation and test in 80-10-10 percent respectively. Split data saved in numpy arrays and pandas dataframes formats. 
 
-For more detail information about the features see [ThermoStability](https://github.com/snabili/thermo_stability).
+For more detail information about the features see [ThermoStability](https://github.com/snabili/Thermo_stability).
 
 ### ML Frameworks:
 - **Scikit-Learn** for Logistic Regression & Random Forest
@@ -105,7 +105,8 @@ Thermo_stability project directory tree:
 │   ├── data.py
 │   ├── dnn_schematic.py
 │   ├── pdp_dnnresults.py
-│   ├── plotting.py 
+│   ├── plotting.py
+│   ├── RFLR_perfomance.py
 │   └── score_cvauc.py
 └── thermo_stability
     ├── __init__.py
@@ -121,18 +122,15 @@ Git clone the project:
 <pre> git clone https://github.com/snabili/thermo_stability.git </pre>
 
 ### Data preparation:
-
 #### 1. API_key
 Register with the Materials Project website to directly access to the database via [API_key](https://next-gen.materialsproject.org/api#:~:text=To%20make%20any%20request%20to,old%20one%20on%20your%20dashboard.)
 
 #### 2. Data extraction:
-
 To download features from MPR database:
 
 <pre> python thermo_stability/feature.py data_acquisition </pre>
 
 #### 3. Data Engineering:
-
 To extract `atomic_fraction`:
 
 <pre> python thermo_stability/feature.py atomic_fraction </pre>
@@ -147,8 +145,8 @@ To merge `bond_structure` csv files, and later all features:
 python thermo_stability/feature.py merge_df_structure
 python thermo_stability/features.py merge_df_file
 ```
-#### 4. Split datasets:
 
+#### 4. Split datasets:
 To split datasets into train, validation, and save to numpy and pandas dataframes:
 
 <pre> python test/data.py </pre>
@@ -168,16 +166,28 @@ The `cpu_time` for DNN run with three CPU cores varies from `1069.02 sec` to `65
 
 The hyppertuned results are saved into log files, later are called by `classificaton.py`.
 
-### Extract best DNN parameters
-The ROC AreaUnderCurve (auc) and accuracy are the two metrics used to hypertune DNN parameters. To extract the best hypertuned parameters run:
+### Diagnostic plots
+Metrics to make diagnostic plots to assess ML methods performance are the ROC AreaUnderCurve (`auc`), `accuracy`, and `F1-score`. To plot the effect of hyperparamter tuning for RandomForest & LogisticRegression and DNN two python codes are used.
+
+#### RandomForest & LogisticRegression:
+An example of how to plot `LogisticRegression` and `RandomForest` hyperparameter results:
 
 ```bash
-python test/score_cvauc.py --dnnmetric dnn_auc
-python test/score_cvauc.py --dnnmetric dnn_accuracy
+python test/RFLR_perfomance.py --script LR_performance --lr_c 0.001 0.01 0.1 1 10 100
+python test/RFLR_perfomance.py --script RF_performance --rf_nest 100 200 300 400 500
 ```
-Comparing these two values, the network chooses almost the same configuration. The output will be saved as text file, extracted by `classification.py` code
-### ML Classification:
 
+#### DNN:
+To extract the best hyperparameters:
+
+```bash
+python test/score_cv.py --dnnmetric dnn_auc
+python test/score_cv.py --dnnmetric dnn_accuracy
+python test/score_cv.py --dnnmetric dnn_f1score
+```
+The network chooses almost the same configuration. The output will be saved as text file, extracted by `classification.py` code.
+
+### ML Classification:
 To run classification:
 
 ```bash
@@ -187,8 +197,7 @@ python test/classification.py rf_classification
 ```
 
 ### Plot results:
-
-a decorator is used to plot a specific result. Run this:
+A decorator is used to plot a specific result. Run this:
 
 <pre> python test/plotting.py dnn_accuracy </pre>
 
