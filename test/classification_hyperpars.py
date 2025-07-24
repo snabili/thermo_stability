@@ -7,7 +7,7 @@ from tensorflow.keras.callbacks import Callback # to def class PrintValScore
 
 from sklearn.model_selection import GridSearchCV # to optimize ML hyper-parameters
 from scikeras.wrappers import KerasClassifier
-from sklearn.metrics import make_scorer, roc_auc_score
+from sklearn.metrics import make_scorer, roc_auc_score, accuracy_score, f1_score, auc
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
@@ -35,7 +35,7 @@ scripter  = utils.Scripter()
 filepath  = config.FILE_DIR
 modelpath = config.MODEL_DIR
 logpath   = config.LOG_DIR
-logger    = utils.setup_logging(name='hypertune',log_path=logpath + "/dnn_hypertune.txt")
+logger    = utils.setup_logging(name='hypertune',log_path=logpath + "/dnn_hypertune_f1score.txt")
 
 logger.info('*'*100 + '\n')
 
@@ -60,7 +60,6 @@ Parallel._backend_callback = staticmethod(tqdm_callback)
 parser = argparse.ArgumentParser(description="Hyperparameter tuning for DNN")
 # Add arguments
 parser.add_argument("--npzfile",    type=str,               help="npz file path",                   default=os.path.join(filepath, 'npz_datasplits.npz'))
-#parser.add_argument("--npzfile",    type=str,               help="npz file path",                   default=os.path.join('/Users/saranabili/Desktop/jobHunts/chem/files/npz_datasplits.npz'))
 parser.add_argument("--HD",         type=int,   nargs="+",  help="tune DNN hidden units")#,         default=[64])
 parser.add_argument("--NL",         type=int,   nargs="+",  help="tune number of hidden layers")#,  default=[1])
 parser.add_argument("--epochs",     type=int,   nargs="+",  help="tune epochs",                     default=[50])
@@ -112,15 +111,14 @@ def DNN_hypertune():
         'batch_size':           args.BS
     }
     logger.info(f"start running grid search at:  {datetime.now().time().strftime('%H:%M:%S')}")
-    scorer = make_scorer(roc_auc_score, needs_proba=True) # used auc as scoring metric
+    scorer = make_scorer(f1_score, needs_proba=True) # alternative for scoring: roc_auc_score, accuracy_score
     # 4. Run GridSearchCV
     n_jobs = min(3, cpu_count())
 
     process = psutil.Process(os.getpid())
     start_cpu_times = process.cpu_times()
 
-    #grid = GridSearchCV(estimator=model, param_grid=dnn_param_grid, scoring=scorer, cv=3, n_jobs=n_jobs, verbose=2) # grid search based on auc; alternative scoring='accuracy'
-    grid = GridSearchCV(estimator=model, param_grid=dnn_param_grid, scoring='accuracy', cv=3, n_jobs=n_jobs, verbose=2)
+    grid = GridSearchCV(estimator=model, param_grid=dnn_param_grid, scoring=scorer, cv=3, n_jobs=n_jobs, verbose=2)
 
 
     # disable GPU usage with tensorflow; apple silicon M1 not compatible
@@ -154,7 +152,7 @@ def DNN_hypertune():
     bs = '-'.join(map(str, args.BS))
     hd = '-'.join(map(str, args.HD))
     nl = '-'.join(map(str, args.NL))
-    npz_filename 	= f'DNN_GridSearch_results_BS-{bs}_HD-{hd}_NL-{nl}_accuracy.npz'
+    npz_filename 	= f'DNN_GridSearch_results_BS-{bs}_HD-{hd}_NL-{nl}_accuracy_higherpars.npz'
     npz_hypertunepath 	= os.path.join(filepath, 'MLHypertune_pars', 'npzfiles')
     os.makedirs(npz_hypertunepath, exist_ok=True)
     np.savez(os.path.join(npz_hypertunepath, npz_filename), **best_vals)
@@ -173,8 +171,8 @@ def RF_hypertune():
     pipeline = Pipeline([('calibrated_rf', calibrated_rf)])
     # Hyperparameter grid (passed through to the base estimator inside CalibratedClassifierCV)
     param_grid = {
-        'calibrated_rf__base_estimator__n_estimators': [100, 200],
-        'calibrated_rf__base_estimator__max_depth': [None, 10, 20],
+        'calibrated_rf__base_estimator__n_estimators': [100, 200, 300, 400, 500, 600],
+        'calibrated_rf__base_estimator__max_depth': [5, 10, 20, 30,40,50],
         'calibrated_rf__base_estimator__min_samples_split': [2, 5]
     }
     # Use AUC as scoring metric
@@ -182,7 +180,7 @@ def RF_hypertune():
     # Grid search
     logger.info(f"start running grid search at:  {datetime.now().time().strftime('%H:%M:%S')}")
     grid = GridSearchCV(estimator=pipeline, param_grid=param_grid, scoring=scorer, cv=3)
-    grid_result = grid.fit(X_train, y_train)
+    grid_result = grid.fit(X_train_scaled, y_train)
     logger.info(f"end running grid search at:  {datetime.now().time().strftime('%H:%M:%S')}")
     logger.info("RF Best Score: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
 

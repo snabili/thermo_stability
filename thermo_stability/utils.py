@@ -1,10 +1,13 @@
 from sklearn.inspection import partial_dependence
+from sklearn.metrics import accuracy_score, f1_score, roc_curve, auc, roc_auc_score
+
 import os, os.path as osp, logging, re, time, json
 from contextlib import contextmanager
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse, sys
 import warnings
+from collections import defaultdict
 np.random.seed(1001)
 
 # thermo_stability/logger.py
@@ -139,6 +142,31 @@ def plot_roc(fpr, tpr, auc_val, label, filename):
     plt.savefig(filename)
     plt.close()
 
+def plot_metrics(par, train_acc, val_acc, train_f1, val_f1,
+                       train_auc, val_auc,xlab, filename):
+    """
+    Plots Accuracy, F1 Score, and AUC vs. hypertune pars
+    """
+    fig, axs = plt.subplots(1, 3, figsize=(18, 5))  # Create 3 subplots horizontally
+    label = {0: 'Accuracy', 1:'F1-score', 2:'AUC'}
+    metric = {0: [train_acc, val_acc], 1:[train_f1, val_f1], 2:[train_auc, val_auc]}
+    for i in range(3):
+        axs[i].plot(par, metric[i][0], label='Train ' + label[i],     marker='o')
+        axs[i].plot(par, metric[i][1], label='Validation '+ label[i], marker='o')
+        #axs[i].set_xscale('log')
+        #axs[i].set_yscale('log')
+        axs[i].set_xlabel(xlab)
+        axs[i].set_ylabel(label[i])
+        axs[i].set_title(label[i]+' vs '+xlab)
+        axs[i].legend()
+        axs[i].grid(True)
+    fig.tight_layout()
+    save_path = os.path.join(plotpath, filename)
+    fig.savefig(save_path, dpi=300)
+    plt.close(fig)
+
+    print(f'Plot saved to {save_path}')
+
 def save_results(path, ml_type, grid_result):
     """ 
     works for LR and RF not DNN
@@ -180,3 +208,29 @@ def compute_pdp(feat, wrapped_model, xpd_train_scaled):
         kind='average',
         grid_resolution=100,
     )
+
+
+def metric_val(model, xtrain, xval, ytrain, yval):
+    ML_train = defaultdict(list)
+    ML_val = defaultdict(list)
+    MLT, MLV = model.predict(xtrain), model.predict(xval)
+    ML_train['acc'], ML_val['acc'] = accuracy_score(ytrain, MLT), accuracy_score(yval, MLV)
+    ML_train['f1'],  ML_val['f1']  = f1_score(ytrain, MLT), f1_score(yval, MLV)
+    ML_train['auc'], ML_val['auc'] = roc_auc_score(ytrain, MLT), roc_auc_score(yval, MLV)
+
+    return ML_train, ML_val
+
+def metric_dict(train, val):
+    ml_train, ml_val = defaultdict(list), defaultdict(list)
+    key = ['acc','f1','auc']
+    ml_train, ml_val  = defaultdict(list), defaultdict(list)
+    for d,v in enumerate(list(train.values())):
+        for k in key:
+            ml_train[k].append(v[k])
+    for d,v in enumerate(list(val.values())):
+        for k in key:
+            ml_val[k].append(v[k])
+    return ml_train, ml_val
+
+def none_or_int(val):
+    return None if val == 'None' else int(val)
