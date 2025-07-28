@@ -44,10 +44,7 @@ def extract_key(filename):
 
 sorted_files = sorted(fnames, key=extract_key)
 
-print('*'*50, sorted(os.listdir(hyperpath)), sorted_files)
-
 for filename in sorted_files:
-#for filename in os.listdir(hyperpath):
     file_path = os.path.join(hyperpath, filename)
     if not os.path.isfile(file_path):
         continue
@@ -77,7 +74,7 @@ pivot = df.pivot(index='BS', columns='HU', values='score')
 
 plt.figure(figsize=(8, 6))
 ax = sns.heatmap(pivot, annot=True, fmt=".3f", cmap="viridis")
-ax.set_title(f"Score Heatmap (NL={args.NL})")
+ax.set_title(f"Score Heatmap: NL={args.NL}, Metric:{args.metric.upper()}")
 plt.ylabel("Batch Size (BS)")
 plt.xlabel("Hidden Units (HU)")
 plt.tight_layout()
