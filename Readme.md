@@ -107,7 +107,8 @@ Thermo_stability project directory tree:
 │   ├── pdp_dnnresults.py
 │   ├── plotting.py
 │   ├── RFLR_perfomance.py
-│   └── score_cvauc.py
+│   ├── scorehyper_barchart.py
+│   └── scorehyper_heatmap.py
 └── thermo_stability
     ├── __init__.py
     ├── config.py
@@ -197,10 +198,10 @@ python test/classification.py rf_classification
 ```
 
 ### Plot results:
-A decorator is used to plot a specific result. Run this:
+A decorator is used to plot a specific result. To plot the mean score cross-validation heatmap plot, run this:
 
-<pre> python test/plotting.py dnn_accuracy </pre>
+<pre> python test/scorehyper_heatmap.py --metric roc --NL 1 </pre>
 
 This is the plot:
 
-![Plot Description](files/plots/dnn_trainVal.png)
+![Plot Description](files/plots/heatmap_NL-1_roc.png)
