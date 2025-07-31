@@ -159,13 +159,13 @@ Tunned ML hyperparameters usign GridSearchCV from `sklearn.model_selection` tool
 
 The same command can be used to hypertune RandomForest by replacing `LR_hypertune` with `RF_hypertune` (`cpu_time=159 sec`)
 
-Hypertunning DNN takes more `cpu_time` and `multiprocessing` cores was used. To run DNN hypertunning do:
+Hypertunning DNN takes more `cpu_time` and `multiprocessing` cores was used. To run DNN hypertuning do:
 
 <pre> python scripts/multiprocessing_hypertune.py  </pre>
 
 The `cpu_time` for DNN run with three CPU cores varies from `1069.02 sec` to `653.09 sec`.
 
-The hyppertuned results are saved into log files, later are called by `classificaton.py`.
+The hypertuned results are saved into log files, later are called by `classificaton.py`.
 
 ### Diagnostic plots
 Metrics to make diagnostic plots to assess ML methods performance are the ROC AreaUnderCurve (`auc`), `accuracy`, and `F1-score`. To plot the effect of hyperparamter tuning for RandomForest & LogisticRegression and DNN two python codes are used.
