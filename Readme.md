@@ -153,13 +153,13 @@ To split datasets into train, validation, and save to numpy and pandas dataframe
 <pre> python test/data.py </pre>
 
 ### ML hyperparameters:
-Tunned ML hyperparameters usign GridSearchCV from `sklearn.model_selection` tools from python `scikit-library`. Parameters are tunned for each ML model individually based on maximizing scoring on `auc`. Hypertunning LogistiRegression can be done in an interactive node (`cpu_time=496 sec`) as follow:
+Tuned ML hyperparameters using GridSearchCV from `sklearn.model_selection` tools from python `scikit-library`. Parameters are tuned for each ML model individually based on maximizing scoring on `auc`. Hypertuning Logisti Regression can be done in an interactive node (`cpu_time=496 sec`) as follow:
 
 <pre> python classification_hyperpars.py LR_hypertune  </pre>
 
 The same command can be used to hypertune RandomForest by replacing `LR_hypertune` with `RF_hypertune` (`cpu_time=159 sec`)
 
-Hypertunning DNN takes more `cpu_time` and `multiprocessing` cores was used. To run DNN hypertuning do:
+Hypertuning DNN takes more `cpu_time` and `multiprocessing` cores was used. To run DNN hypertuning do:
 
 <pre> python scripts/multiprocessing_hypertune.py  </pre>
 
@@ -198,10 +198,23 @@ python test/classification.py rf_classification
 ```
 
 ### Plot results:
-A decorator is used to plot a specific result. To plot the mean score cross-validation heatmap plot, run this:
+A decorator is used to plot a specific result. 
+
+To plot the mean score cross-validation heatmap plot, run this:
 
 <pre> python test/scorehyper_heatmap.py --metric roc --NL 1 </pre>
 
 This is the plot:
 
 ![Plot Description](files/plots/heatmap_NL-1_roc.png)
+
+To make DNN metric plots:
+
+<pre> python test/plotting.py dnn_metric_evaluation </pre>
+
+This is the plot:
+
+![Plot Description](files/plots/dnn_trainVal.png)
+
+
+todo: add codes to use condor

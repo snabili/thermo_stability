@@ -100,7 +100,7 @@ def dnn_predvsactual():
 
 
 @scripter
-def dnn_accuracy():
+def dnn_metric_evaluation():
     # Load history from pickle file
     with open(modelpath + '/dnn_history.pkl','rb') as f:
         history_dnn = pickle.load(f)
@@ -125,7 +125,7 @@ def dnn_accuracy():
         plt.title(title)
         plt.legend()
         plt.tight_layout()
-    filename = plotpath + '/dnn_trainVal.pdf'
+    filename = plotpath + '/dnn_trainVal.png'
     plt.savefig(filename)
     plt.close()
     logger.info(f"Plot saved: {filename}")
