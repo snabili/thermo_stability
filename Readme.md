@@ -202,11 +202,11 @@ A decorator is used to plot a specific result.
 
 To plot the mean score cross-validation heatmap plot, run this:
 
-<pre> python test/scorehyper_heatmap.py --metric roc --NL 1 </pre>
+<pre> python test/scorehyper_heatmap.py --metric roc --NL 2 </pre>
 
 This is the plot:
 
-![Plot Description](files/plots/heatmap_NL-1_roc.png)
+![Plot Description](files/plots/heatmap_NL-2_roc.png)
 
 To make DNN metric plots:
 
