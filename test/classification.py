@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras import layers
+from tensorflow.keras.metrics import F1Score
 
 # data preparation for MLs
 from sklearn.utils import class_weight
@@ -68,6 +69,7 @@ def dnn_classification():
    batch = best_config['batch_size']
    neurons = best_config['model__hidden_units']
    layer_num = best_config['model__layer_num']
+   logger.info(best_config)
    logger.info(f'best score {dnn_max:.3f}, with params: batch_size={batch:.1f}, neurons={neurons:.1f}, layer_num={layer_num:.1f}')
 
    
@@ -78,45 +80,66 @@ def dnn_classification():
    
    # learning rate scheduler; lowers the learning rate when the validation loss plateaus
    lr_scheduler = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1, min_lr=1e-6)
-   
+
    # Define model
    DNN_model = Sequential()
    # Input layer
-   DNN_model.add(layers.Dense(neurons, activation=act, input_shape=[X_train_scaled.shape[1]]))
-   DNN_model.add(layers.Dropout(0.1))
+   DNN_model.add(layers.Dense(neurons, input_shape=[X_train_scaled.shape[1]]))
    DNN_model.add(layers.BatchNormalization())
+   DNN_model.add(layers.Activation(act))
+   DNN_model.add(layers.Dropout(0.1))
+   #
    
    # Hidden layers (using a loop)
-   for _ in range(layer_num):  # 2 hidden layers
-       DNN_model.add(layers.Dense(neurons, activation=act))
-       DNN_model.add(layers.Dropout(0.3)) # typical dropout for moderate to strong regularization
+   for _ in range(layer_num):
+       DNN_model.add(layers.Dense(neurons))
        DNN_model.add(layers.BatchNormalization())
+       DNN_model.add(layers.Activation(act))
+       DNN_model.add(layers.Dropout(0.1)) # typical dropout for moderate to strong regularization
    
    # Output layer
    DNN_model.add(layers.Dense(1,activation='sigmoid'))
    
+   # add f1-score as additional metric; read threshold value from test/precision_recall.py code
+   target_label = 'Optimal Threshold: '
+   f1score_log = os.path.join(logpath,'precision_recall.txt')
+   with open(f1score_log,'r') as file:
+      for line in file:
+         if line.startswith(target_label):
+            parts = line.split(':')
+            f1score_threshold = float(parts[1].strip())
+            break  # Stop searching after finding the value   
+   f1_metric = F1Score(name='f1_score',threshold=f1score_threshold)
+
    #Compile the model
-   DNN_model.compile(optimizer=adam, loss=loss, metrics=['accuracy'])
+   DNN_model.compile(optimizer=adam, loss=loss, metrics=['accuracy',f1_metric])
    logger.info(DNN_model.summary())
    
    # to avoid overfitting
-   early_stopping = tf.keras.callbacks.EarlyStopping(patience = 5, min_delta = 0.001, restore_best_weights = True)
+   early_stopping = tf.keras.callbacks.EarlyStopping(patience = 10, min_delta = 0.001, restore_best_weights = True)
    
    # Compute class weights
    class_weights = class_weight.compute_class_weight(class_weight='balanced', classes=np.unique(y_train), y=y_train)
    class_weights = dict(enumerate(class_weights))
-   
-   #history_dnn = DNN_model.fit(X_train_scaled, y_train, validation_data=(X_val_scaled, y_val), batch_size=batch, epochs=50, callbacks=[early_stopping, lr_scheduler], class_weight=class_weights) # alternatively use: callbacks=[lr_scheduler]
-   #y_DNN_pred = DNN_model.predict(X_test_scaled)
-   history_dnn = DNN_model.fit(Xpd_train_scaled, ypd_train, validation_data=(Xpd_val_scaled, ypd_val), batch_size=batch, epochs=50, 
-                               callbacks=[early_stopping, lr_scheduler], class_weight=class_weights) # alternatively use: callbacks=[lr_scheduler]
+   logger.info('sanity check: ', Xpd_val_scaled.shape, ypd_val.shape)
+   history_dnn = DNN_model.fit(Xpd_train_scaled, ypd_train, validation_data=(Xpd_val_scaled, ypd_val), batch_size=batch, epochs=50, callbacks=[early_stopping,lr_scheduler], class_weight=class_weights) 
+                               #callbacks=[early_stopping, lr_scheduler], class_weight=class_weights) # alternatively use: callbacks=[lr_scheduler]
    y_DNN_pred = DNN_model.predict(Xpd_test_scaled)
    labels = np.unique(ypd_test)
    
    final_val = defaultdict(list)
-   for s in ['val_loss','loss','val_accuracy','accuracy']:
+   for s in ['val_loss','loss','val_accuracy','accuracy','f1_score','val_f1_score']:
        final_val[s].append(history_dnn.history[s][-1])
-   logger.info({k: f"{v[0]:.4f}" for k, v in final_val.items()})
+
+   final_log_info = {}
+   for k, v in final_val.items():
+      value = v[0]
+      if isinstance(value, np.ndarray):
+         final_log_info[k] = f"{value.item():.4f}"
+      else:
+         final_log_info[k] = f"{value:.4f}"
+
+   logger.info(final_log_info)
    
    # Save dnn trained classification + history files
    DNN_model.save(modelpath + '/dnn_classification.h5')
@@ -128,9 +151,10 @@ def lr_classification():
    data = load_iris()
    lr_txtfile =  modelpath + '/LR_hypertune.txt'
    lr_entries = utils.extract_best_scores(lr_txtfile)
-   params = Params(lr_entries)
+   Params = params(lr_entries)
    # read hyperparamters from classification_hyperpars.py output file
-   lr_params = Params['LR'][max(Params['LR'])]
+   #lr_params = Params['LR'][max(Params['LR'])]
+   lr_params = {'max_iter':100, 'penalty':'l2', 'C':1}
    C = lr_params['C']
    max_iter = lr_params['max_iter']
    penalty = lr_params['penalty']
@@ -147,9 +171,10 @@ def rf_classification():
    data = load_iris()
    rf_txtfile =  modelpath + '/RF_hypertune.txt'
    rf_entries = utils.extract_best_scores(rf_txtfile)
-   params = Params(rf_entries)
+   '''params = Params(rf_entries)
    # read hyperparamters from classification_hyperpars.py output file
-   rf_params = Params['RF'][max(Params['RF'])]
+   rf_params = Params['RF'][max(Params['RF'])]'''
+   rf_params = {'calibrated_rf__base_estimator__n_estimators':200, 'calibrated_rf__base_estimator__min_samples_split':2, 'calibrated_rf__base_estimator__max_depth':5}
    n_estimator       = rf_params['calibrated_rf__base_estimator__n_estimators']
    min_samples_split = rf_params['calibrated_rf__base_estimator__min_samples_split']
    max_depth         = rf_params['calibrated_rf__base_estimator__max_depth']
@@ -160,7 +185,7 @@ def rf_classification():
    y_RF_pred = RF_model.predict(X_test)
    labels = np.unique(y_test)
    logger.info(classification_report(y_test, y_RF_pred, target_names=data.target_names[labels]))
-   joblib.dump(RF_model, modelpath + "/model/RandomForest_model.joblib")
+   joblib.dump(RF_model, modelpath + "/RandomForest_model.joblib")
 
 
 # *************************************************************************************
@@ -171,7 +196,7 @@ def xgboost():
    xgb_model = xgb.XGBClassifier()
    Xpd_train_scaled = df_splits[df_splits['split'] == 'train_scaled'].drop(columns=['split','label'])
    ypd_train        = df_splits[df_splits['split'] == 'train_label']['label']
-   xgb_model.fit(Xpd_train_scaled, y_train)
+   xgb_model.fit(Xpd_train_scaled, ypd_train)
    joblib.dump(xgb_model, modelpath + "/XGB_model.joblib")
 
 
