@@ -183,11 +183,12 @@ python test/RFLR_perfomance.py --script RF_performance --rf_nest 100 200 300 400
 To extract the best hyperparameters:
 
 ```bash
-python test/score_cv.py --dnnmetric dnn_auc
-python test/score_cv.py --dnnmetric dnn_accuracy
-python test/score_cv.py --dnnmetric dnn_f1score
+python test/scorehyper_barchart.py --metric acc
+python test/scorehyper_barchart.py --metric roc
+python test/scorehyper_barchart.py --metric f1
 ```
-The network chooses almost the same configuration. The output will be saved as text file, extracted by `classification.py` code.
+
+The output will be saved in three text files named `scoretune_metric-acc.txt`, `scoretune_metric-roc.txt` and `scoretune_metric-f1.txt` in `files/logs` format. The values used in `classification.py` code are extracted from  `scoretune_metric-acc.txt` the result is almost the same and the improvement in performance is negligible.
 
 ### ML Classification:
 To run classification:
@@ -217,5 +218,3 @@ This is the plot:
 
 ![Plot Description](files/plots/dnn_trainVal.png)
 
-
-todo: add codes to use condor
