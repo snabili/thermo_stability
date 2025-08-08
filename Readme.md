@@ -53,6 +53,10 @@ pip install seaborn
 
 ```
 
+In addtion to general dependencies, the thermo_stability project can be installed via pip:
+
+<pre> pip install thermo-stability==0.0.5 </pre>
+
 MacOS needs slightly different packages, especially for `tensoflow`. Use `env_ml_macos.yml` file to setup conda environment.
 
 ### HTCondor setup

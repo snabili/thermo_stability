@@ -18,3 +18,4 @@ dependencies:
       - mp-api==0.45.5
       - flatten-dict==0.4.2
       - scikeras==0.12.0
+      - psutil
