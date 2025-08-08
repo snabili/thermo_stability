@@ -1,7 +1,7 @@
 # Machine Learning for Material properties
 
 ## General Information
-Thermo_stability project trains **Machine Learning (ML) models** to predict **thermodynamic stability** of inorganic crystalll chemical compounds, inspired by [ElemNet](https://www.nature.com/articles/s41598-018-35934-y) paper. The study uses binary classification for various ML methods.
+Thermo_stability project trains **Machine Learning (ML) models** to predict **thermodynamic stability** of inorganic crystalll chemical compounds, inspired by [ElemNet](https://www.nature.com/articles/s41598-018-35934-y) paper. The study uses binary classification for various ML methods. For more detailed information about the concept and results of this study, refer to [ThermoStability](Thermo_Stability.pdf) file.
 
 ### Dataset Source:
 The dataset used are **Next-Gen Materials Project API** from [Materials Project (MPR)](https://next-gen.materialsproject.org/) database. To download dataset, the free api_key was used from MPR.
@@ -20,8 +20,6 @@ The ML features used in this study are classified into two categories:
 - **Feature Engineering** including *atomic fractions* and *bond structure statistics*. Both sample weight and model weight are applied to DNN and LogisticRegression, whereas only model weight is applied to RandomForest model.
 
 **Split datasets** to train, validation and test in 80-10-10 percent respectively. Split data saved in numpy arrays and pandas dataframes formats. 
-
-For more detail information about the features see [ThermoStability](https://github.com/snabili/Thermo_stability).
 
 ### ML Frameworks:
 - **Scikit-Learn** for Logistic Regression & Random Forest
@@ -104,12 +102,14 @@ Thermo_stability project directory tree:
 │   ├── classification.py
 │   ├── data.py
 │   ├── dnn_schematic.py
+│   ├── dnn_shap.py
 │   ├── pdp_dnnresults.py
 │   ├── plotting.py
 │   ├── precision_recall.py
 │   ├── RFLR_perfomance.py
 │   ├── scorehyper_barchart.py
-│   └── scorehyper_heatmap.py
+│   ├── scorehyper_heatmap.py
+│   └── uncertainty.py
 └── thermo_stability
     ├── __init__.py
     ├── config.py

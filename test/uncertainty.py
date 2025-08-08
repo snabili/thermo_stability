@@ -5,12 +5,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense
 from tensorflow.keras import layers
 
 # data preparation for MLs
 from sklearn.utils import class_weight
+from sklearn.metrics import confusion_matrix, log_loss # to print core classification metrix
 
 from thermo_stability import utils, config
 
@@ -19,7 +20,7 @@ plotpath  = config.PLOT_DIR
 logpath   = config.LOG_DIR
 modelpath = config.MODEL_DIR
 
-logger = utils.setup_logging(log_path=logpath + "/uncertainties.txt", name="Uncertainty")
+logger = utils.setup_logging(log_path=logpath + "/uncertainties_coreclassification.txt", name="Uncertainty")
 utils.set_matplotlib_fontsizes() # set up plt format
 
 npz_split = np.load(filepath + '/npz_datasplits.npz')
@@ -30,7 +31,8 @@ X_train_scaled, y_train = npz_split['X_train_scaled'], npz_split['y_train']
 
 def create_my_dnn_model():
    # hyperpars from classification_hyperpars.py code
-   dnn_txtfile = os.path.join(logpath,'scoretune_metric-acc.txt')
+   #dnn_txtfile = os.path.join(logpath,'scoretune_metric-acc.txt')
+   dnn_txtfile = os.path.join(filepath ,'MLHypertune_pars',  'DNN_scoretune_dnn_accuracy.txt') 
    dnn_entries = utils.extract_best_scores(dnn_txtfile)
    Params = utils.params(dnn_entries)
    dnn_max = max(Params)
@@ -95,6 +97,7 @@ for model in models:
 
 # Convert to a NumPy array for easy calculation
 all_predictions = np.array(all_predictions)
+np.save(os.path.join(filepath,'uncertainty.npz'),all_predictions)
 logger.info(f'sanity check: prediction shape = {all_predictions.shape}')
 
 mean_predictions = np.mean(all_predictions, axis=0)
@@ -103,14 +106,50 @@ std_predictions = np.std(all_predictions, axis=0)
 
 plt.plot(mean_predictions,std_predictions,'.')
 plt.axvline(x=0.5,linestyle='dashed',color='red',label='Decision Boundary')
-plt.xlabel('Mean Prediction (Probability of Stability)')
-plt.ylabel('Standard Deviation (Uncertainty)')
-plt.title('Uncertainty vs. Mean Prediction')
+plt.xlabel('Probability of Stability')
+plt.ylabel('Uncertainty')
+plt.title('Std vs. Mean Prediction')
 plt.legend()
 plt.grid(True)
 plt.text(0.1,0.05,'High Confidence',color='black',fontweight='bold')
 plt.text(0.75,0.05,'High Confidence',color='black',fontweight='bold')
-plt.text(0.5,0.4,'High Uncertainty',color='red',fontweight='bold')
+plt.text(0.5,0.3,'High Uncertainty',color='red',fontweight='bold')
 plotname = os.path.join(plotpath,'Uncertainty_vs_Prediction.pdf')
 plt.savefig(plotname)
 logger.info(f"Plot saved: {plotname}")
+
+
+# Get the raw probability scores for the positive class ---
+dnn_model = load_model(os.path.join(modelpath,'dnn_classification.h5'))
+y_probabilities = dnn_model.predict(X_test_scaled)
+y_pred = (y_probabilities >= 0.5).astype(int)
+
+cm = confusion_matrix(y_test, y_pred)
+tn, fp, fn, tp = cm.ravel() # Extract the values
+
+logger.info("Core Classification Metric:  \n")
+logger.info("Confusion Matrix:", cm)
+
+# Compute metrics:
+accuracy = (tp+tn)/(tp+tn+fp+fn)*100
+precision = tp/(tp+fp)*100
+recall = tp/(tp+fn)*100
+f1score = 2*tp/(tp+fp)*tp/(tp+fn)/(tp/(tp+fp) + tp/(tp+fn))
+specificity = tn / (tn + fp)
+log_loss_value = log_loss(y_test, y_probabilities)
+
+logger.info(f"True Negatives (TN): {tn}")
+logger.info(f"False Positives (FP): {fp}")
+logger.info(f"True Positive (TP): {tp}")
+logger.info(f"False Negative (FN): {fn}")
+logger.info("Metrics *** \n")
+logger.info(f"Accuracy: {accuracy:.2f}")
+logger.info(f"Precision: {precision:.2f}")
+logger.info(f"Recall: {recall:.2f}")
+logger.info(f"F1-Score: {f1score:.2f}")
+logger.info(f"Specificity: {specificity:.2f}")
+
+logger.info(f"LogLoss: {log_loss_value:.2f}")
+
+
+
