@@ -55,7 +55,7 @@ pip install seaborn
 
 In addtion to general dependencies, the thermo_stability project can be installed via pip:
 
-<pre> pip install thermo-stability==0.0.5 </pre>
+<pre> pip install thermo-stability==0.0.6 </pre>
 
 MacOS needs slightly different packages, especially for `tensoflow`. Use `env_ml_macos.yml` file to setup conda environment.
 
@@ -80,6 +80,7 @@ Thermo_stability project directory tree:
 <pre>
 ├── __init__.py
 ├── bond_stats
+├── config.py         ← real config (custom paths)
 ├── directory_tree.txt
 ├── files
 │   ├── bond_stats
@@ -116,8 +117,8 @@ Thermo_stability project directory tree:
 │   └── uncertainty.py
 └── thermo_stability
     ├── __init__.py
-    ├── config.py
-    ├── creds.py
+    ├── config.py       ← dummy config (to pip install thermo_stability module)
+    ├── mpr_creds.py
     ├── feature.py
     ├── processing.py
     └── utils.py
@@ -129,7 +130,11 @@ Git clone the project:
 
 ### Data preparation:
 #### 1. API_key
-Register with the Materials Project website to directly access to the database via [API_key](https://next-gen.materialsproject.org/api#:~:text=To%20make%20any%20request%20to,old%20one%20on%20your%20dashboard.)
+Register with the Materials Project website to directly access to the database via [API_key](https://next-gen.materialsproject.org/api#:~:text=To%20make%20any%20request%20to,old%20one%20on%20your%20dashboard.) After downloading your `api_key` add this line at the end of your environment file ~/.zshrc (or ~/.bshrc) file:
+
+<pre> export MPR_APIKEY="your_secure_api_key" </pre>
+
+Replace `your_secure_api_key` to the actual key copied from [here](https://next-gen.materialsproject.org/api#:~:text=To%20make%20any%20request%20to,old%20one%20on%20your%20dashboard)
 
 #### 2. Data extraction:
 To download features from MPR database:

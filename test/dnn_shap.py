@@ -3,10 +3,11 @@ import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+from thermo_stability import utils
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from thermo_stability import config, utils
+import config
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential

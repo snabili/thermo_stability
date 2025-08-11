@@ -1,22 +1,25 @@
-import re, os,sys, argparse
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import numpy as np
-from thermo_stability import config, utils
+from thermo_stability import utils
+
+import re, os,sys, argparse
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
 filepath = config.FILE_DIR
 logpath  = config.LOG_DIR
 plotpath = config.PLOT_DIR
 
-logger   = utils.setup_logging(name='scoretune',log_path=filepath + "/TEST.txt")
-hyperpath=os.path.join(logpath,'dnn_f1score')
+hyperpath=os.path.join(logpath,'dnn_allmetrics')
 
 # Create argument parser
 parser = argparse.ArgumentParser(description="barcharts NL fixed")
 # Add arguments
 parser.add_argument("--metric",     type=str,   help="metric to plot",    default='roc') # options: roc, acc, f1
 args = parser.parse_args()
+
+logger   = utils.setup_logging(name='scoretune',log_path=logpath + "/scoretune_metric-" + args.metric + ".txt")
 
 utils.set_matplotlib_fontsizes()
 
@@ -33,6 +36,7 @@ pattern = (
     )
 
 def extract_key(filname):
+    print(filname)
     bs = int(re.search(r'bs-(\d+)', filname).group(1))
     hd = int(re.search(r'hd-(\d+)', filname).group(1))
     nl = int(re.search(r'nl-(\d+)', filname).group(1))
@@ -68,9 +72,9 @@ def dict_prep(pattern, hyperpath, metric):
         nl_labels = nl_keys  # Assumes all groups have same NLs
         mean_score.append([grouped_scores[(bs_label, hu_label)][nl][0] for nl in nl_keys])
         std_score.append([grouped_scores[(bs_label, hu_label)][nl][1] for nl in nl_keys])
-    return mean_score, std_score, group_labels, nl_labels
+    return mean_score, std_score, group_labels, nl_labels, grouped_scores
 
-mean_score, std_score, group_labels, nl_labels = dict_prep(pattern, hyperpath, args.metric)
+mean_score, std_score, group_labels, nl_labels, grouped_scores = dict_prep(pattern, hyperpath, args.metric)
 
 #print(score, std)
 
@@ -99,4 +103,20 @@ plt.grid(axis="y", linestyle="--", alpha=0.5)
 plt.legend(fontsize=14,ncol=3)
 plt.tight_layout()
 savfilename = os.path.join(plotpath, f'{args.metric.upper()}_hyperpars_barchart.pdf')
+logger.info(f"Plot saved: {savfilename}")
 plt.savefig(savfilename)
+
+# save highest score into log file to use in ultimate classification
+best_score = -float('inf')
+best_bs_hu = None
+best_nl = None
+
+for bs_hu_key, nl_dict in grouped_scores.items():
+    for nl_key, (score, error) in nl_dict.items():
+        if score > best_score:
+            best_score = score
+            best_bs_hu = bs_hu_key
+            best_nl = nl_key
+
+logger.info(f" Highest Score: {best_score:.8f}")
+logger.info(f" Best Params: {best_bs_hu}, {best_nl}")

@@ -1,7 +1,3 @@
-import os, sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -13,7 +9,10 @@ from tensorflow.keras import layers
 from sklearn.utils import class_weight
 from sklearn.metrics import confusion_matrix, log_loss # to print core classification metrix
 
-from thermo_stability import utils, config
+from thermo_stability import utils
+import os,sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
 filepath  = config.FILE_DIR
 plotpath  = config.PLOT_DIR

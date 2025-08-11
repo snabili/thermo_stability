@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-import os,sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import joblib 
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -11,22 +9,16 @@ from scikeras.wrappers import KerasClassifier # keras optimizers are not picklab
 from sklearn.inspection import partial_dependence
 
 # Custom moduls
-from thermo_stability import config, utils
+from thermo_stability import utils
+import os,sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
 utils.set_matplotlib_fontsizes()
 filepath = config.FILE_DIR
 modelpath= config.MODEL_DIR
 logpath   = config.LOG_DIR
 logger = utils.setup_logging(logpath + "/plotting.txt")
-
-'''def compute_pdp(feat):
-    return feat, partial_dependence(
-        wrapped_model,
-        Xpd_train_scaled,
-        features=[feat],
-        kind='average',
-        grid_resolution=100,
-    )'''
 
 # Load dnn model and datasplit CSV
 dnn_model = load_model(modelpath + '/dnn_classification.h5')
@@ -40,7 +32,7 @@ print('train feat info,', Xpd_train_scaled.shape, ypd_train.shape)
 
 
 logger.info(f"start wrapping model with keras:  {datetime.now().time().strftime('%H:%M:%S')}")
-wrapped_model = KerasClassifier(model=dnn_model, epochs=50, batch_size=32)
+wrapped_model = KerasClassifier(model=dnn_model, epochs=12, batch_size=128)
 wrapped_model.fit(Xpd_train_scaled, ypd_train)
 
 logger.info(f"start partial dependence:  {datetime.now().time().strftime('%H:%M:%S')}")

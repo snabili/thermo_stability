@@ -4,11 +4,13 @@ from sklearn.metrics import precision_recall_curve, f1_score
 from sklearn.datasets import make_classification
 
 from tensorflow.keras.models import load_model
+from thermo_stability import utils
 
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
-from thermo_stability import config, utils
+
 filepath  = config.FILE_DIR
 logpath   = config.LOG_DIR
 modelpath = config.MODEL_DIR
@@ -28,6 +30,8 @@ y_scores = dnn_model.predict(X_test_scaled)
 # Compute the precision-recall curve data ---
 precision, recall, thresholds = precision_recall_curve(y_test, y_scores)
 
+print(precision, recall, thresholds)
+
 
 # Find the optimal threshold based on F1-score ---
 thresholds = np.arange(0.0, 1.0, 0.01)
@@ -36,8 +40,8 @@ optimal_threshold_index = np.argmax(f1_scores)
 optimal_threshold = thresholds[optimal_threshold_index]
 max_f1 = f1_scores[optimal_threshold_index]
 
-logger.info(f"\nOptimal Threshold: {optimal_threshold:.4f}")
-logger.info(f"Maximum F1-score at this threshold: {max_f1:.4f}")
+logger.info(f"\nOptimal Threshold: {optimal_threshold:.2f}")
+logger.info(f"Maximum F1-score at this threshold: {max_f1:.2f}")
 
 # Plot precission-recall curve + F1-score vs. threshold
 plt.figure(figsize=(8, 3))
@@ -50,7 +54,7 @@ plt.legend()
 plt.grid(True)
 plt.subplot(1,2,2)
 plt.plot(thresholds, f1_scores, marker='.', label='F1-score')
-plt.axvline(x=optimal_threshold, color='r', linestyle='--', label=f'Optimal Threshold ({optimal_threshold:.4f})')
+plt.axvline(x=optimal_threshold, color='r', linestyle='--', label=f'Optimal Threshold ({optimal_threshold:.2f})')
 plt.xlabel('Threshold')
 plt.ylabel('F1-score')
 plt.title('F1-score vs. Threshold')

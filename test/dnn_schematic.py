@@ -1,7 +1,11 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import numpy as np
-import os
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
+
+plotpath = config.PLOT_DIR
 
 def draw_dnn(layer_sizes, neuron_colors=None, connection_colors=None, layer_labels=None):
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -25,7 +29,7 @@ def draw_dnn(layer_sizes, neuron_colors=None, connection_colors=None, layer_labe
             elif i == len(layer_sizes) - 1:
                 layer_labels.append("Output Layer, \n Act:sigmoid")
             else:
-                layer_labels.append(f"Hidden Layer {i}, \n Dense=32 \n dropout=0.3, \n Act:ReLU")
+                layer_labels.append(f"Hidden Layer {i}, \n Dense=128 \n dropout=0.1, \n Act:ReLU")
 
     v_spacing = 1.5
     h_spacing = 2.5
@@ -56,7 +60,8 @@ def draw_dnn(layer_sizes, neuron_colors=None, connection_colors=None, layer_labe
     ax.set_ylim(-2, v_spacing * max_neurons)
     plt.title("DNN Schematic", fontsize=22, loc='center')
     plt.tight_layout()
-    plt.savefig(os.path.join(os.getcwd(),'files','dnn_schematic.pdf'))
+    plt.savefig(os.path.join(plotpath,'dnn_schematic.pdf'))
 
 # Draw DNN schematic
-draw_dnn([14, 32, 32, 1])
+#draw_dnn([14, 32, 32, 1])
+draw_dnn([14, 32, 1])

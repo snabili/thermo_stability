@@ -7,7 +7,6 @@ from tensorflow.keras.metrics import F1Score
 
 # data preparation for MLs
 from sklearn.utils import class_weight
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.datasets import load_iris
 
@@ -22,18 +21,31 @@ import xgboost as xgb # --> feature importance
 # General modules
 import numpy as np
 import pandas as pd
-import os, re, sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
 from collections import OrderedDict, defaultdict
 import pickle
 import joblib
 
 # Costume modules
-from thermo_stability import config, utils, processing
+import os, re, sys
+from thermo_stability import utils, processing
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
+
+#script_dir = os.path.dirname(os.path.dirname((os.path.abspath(__file__))))
+#print(script_dir)
 
 filepath  = config.FILE_DIR 
 logpath   = config.LOG_DIR
 modelpath = config.MODEL_DIR
+
+'''filepath  = config.FILE_DIR 
+logpath   = config.LOG_DIR
+modelpath = config.MODEL_DIR
+filepath = os.path.join(script_dir, 'files')
+logpath = os.path.join(filepath,'logs')
+modelpath = os.path.join(filepath,"models","MLHypertune_pars")'''
 logger = utils.setup_logging(log_path=logpath + "/classification.txt", name="Classification")
 
 scripter = utils.Scripter()
@@ -62,6 +74,8 @@ def params(entry):
 @scripter
 def dnn_classification():
    dnn_txtfile =  os.path.join(filepath ,'MLHypertune_pars',  'DNN_scoretune_dnn_accuracy.txt')
+   #dnn_txtfile = os.path.join(logpath,'scoretune_metric-acc.txt')
+
    dnn_entries = utils.extract_best_scores(dnn_txtfile)
    Params = params(dnn_entries)
    dnn_max = max(Params)
@@ -121,7 +135,7 @@ def dnn_classification():
    # Compute class weights
    class_weights = class_weight.compute_class_weight(class_weight='balanced', classes=np.unique(y_train), y=y_train)
    class_weights = dict(enumerate(class_weights))
-   logger.info('sanity check: ', Xpd_val_scaled.shape, ypd_val.shape)
+   #logger.info('sanity check: ', Xpd_val_scaled.shape, ypd_val.shape)
    history_dnn = DNN_model.fit(Xpd_train_scaled, ypd_train, validation_data=(Xpd_val_scaled, ypd_val), batch_size=batch, epochs=50, callbacks=[early_stopping,lr_scheduler], class_weight=class_weights) 
                                #callbacks=[early_stopping, lr_scheduler], class_weight=class_weights) # alternatively use: callbacks=[lr_scheduler]
    y_DNN_pred = DNN_model.predict(Xpd_test_scaled)

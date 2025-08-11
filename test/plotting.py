@@ -6,18 +6,20 @@ from matplotlib.colors import LogNorm
 import seaborn as sns # --> heat maps
 import pickle # --> to access dnn history
 import joblib
-import os, sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # ML modules
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-from sklearn.metrics import roc_curve, auc, roc_auc_score
+from sklearn.metrics import roc_curve, auc, roc_auc_score, log_loss
 from sklearn.inspection import permutation_importance
+
 import shap
 import xgboost as xgb # --> feature importance
 # custom modules
-from thermo_stability import config, utils, processing
+from thermo_stability import utils
+import os, sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
 
 scripter = utils.Scripter()
@@ -44,6 +46,7 @@ def data_load():
     df_splits = pd.read_csv(filepath + '/df_datasplit.csv')
     Xpd_train_scaled     = df_splits[df_splits['split'] == 'train_scaled'].drop(columns=['split','label'])
     Xpd_ebh_train_scaled = df_splits[df_splits['split'] == 'train_ebh_scaled'].drop(columns=['split','label'])
+    Xpd_ebh_train        = df_splits[df_splits['split'] == 'train'].drop(columns=['split','label'])
     Xpd_test_scaled      = df_splits[df_splits['split'] == 'test_scaled'].drop(columns=['split','label'])
     ypd_train            = df_splits[df_splits['split'] == 'train_label']['label']
     ypd_ebh_train        = df_splits[df_splits['split'] == 'train_ebh_label']['label']
@@ -53,6 +56,7 @@ def data_load():
     return {
         "Xpd_train_scaled": Xpd_train_scaled,
         "Xpd_ebh_train_scaled": Xpd_ebh_train_scaled,
+        "Xpd_ebh_train": Xpd_ebh_train,
         "ypd_train": ypd_train,
         "ypd_ebh_train": ypd_ebh_train,
         "Xpd_test_scaled": Xpd_test_scaled,
@@ -94,6 +98,8 @@ def dnn_predvsactual():
     plt.title("Predicted vs. Actual Values",fontsize=16)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
+    plt.text(0,0.25,'Unstable',fontweight='bold')
+    plt.text(0.75,0.75,'Stable',fontweight='bold')
     filename = plotpath + '/dnn_predvsactual.pdf'
     plt.savefig(filename)
     logger.info(f"Plot saved: {plotpath}")
@@ -110,12 +116,13 @@ def dnn_metric_evaluation():
     metrics= ['loss', 'accuracy','f1_score']
     titles = ['Loss', 'Accuracy','F1-score']
     ylabel_map={'loss': 'Loss', 'accuracy': 'Accuracy', 'f1_score':'F1-score'}
-    plt.figure(figsize=(6 * len(metrics), 4))
+    #plt.figure(figsize=(6 * len(metrics), 4))
     for i, metric in enumerate(metrics, 1):
+        plt.figure(figsize=(6, 4))
         train_metric = history_dnn.get(metric)
         val_metric = history_dnn.get(f"val_{metric}")
         if train_metric is None or val_metric is None: continue
-        plt.subplot(1, len(metrics), i)
+        #plt.subplot(1, len(metrics), i)
         plt.plot(train_metric, label='Training')
         plt.plot(val_metric, label='Validation')
         plt.xlabel('Epochs')
@@ -125,10 +132,10 @@ def dnn_metric_evaluation():
         plt.title(title)
         plt.legend()
         plt.tight_layout()
-    filename = plotpath + '/dnn_trainVal.png'
-    plt.savefig(filename)
-    plt.close()
-    logger.info(f"Plot saved: {filename}")
+        filename = plotpath + '/dnn_'+metric+'.pdf'
+        plt.savefig(filename)
+        plt.close()
+        logger.info(f"Plot saved: {filename}")
 
 
 @scripter
@@ -172,6 +179,10 @@ def ml_roc():
     y_pred_proba_LR  = LR_model.predict_proba(X_test_scaled)[:, 1]
     y_pred_proba_RF  = RF_model.predict_proba(X_test)[:, 1]  # Prob for positive class
 
+    logloss_value_dnn = log_loss(y_true, y_pred_proba_dnn)
+    logloss_value_lr = log_loss(y_true, y_pred_proba_LR)
+    logloss_value_rf = log_loss(y_true, y_pred_proba_RF)
+
     dnn_fpr, dnn_tpr, _ = roc_curve(y_true, y_pred_proba_dnn)
     lr_fpr, lr_tpr, _   = roc_curve(y_true, y_pred_proba_LR)
     rf_fpr, rf_tpr, _   = roc_curve(y_true, y_pred_proba_RF)
@@ -185,9 +196,9 @@ def ml_roc():
 
     # ROC curves: LR, RF, DNN
     plt.figure(figsize=(6, 5))
-    plt.plot(lr_fpr, lr_tpr, label=f"LogisticRegression (AUC = {lr_roc_auc:.2f})")
-    plt.plot(rf_fpr, rf_tpr, label=f"RandomForest (AUC = {rf_roc_auc:.2f})")
-    plt.plot(dnn_fpr, dnn_tpr, label=f"DNN (AUC = {dnn_roc_auc:.2f})")
+    plt.plot(lr_fpr, lr_tpr, label=f"LR  (AUC = {lr_roc_auc:.2f}, LogLoss = {logloss_value_lr:.2f})")
+    plt.plot(rf_fpr, rf_tpr, label=f"RF  (AUC = {rf_roc_auc:.2f}, LogLoss = {logloss_value_rf:.2f})")
+    plt.plot(dnn_fpr, dnn_tpr, label=f"DNN (AUC = {dnn_roc_auc:.2f}, LogLoss = {logloss_value_dnn:.2f})")
     plt.plot([0, 1], [0, 1], linestyle='--', color='gray')
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
@@ -204,7 +215,7 @@ def feat_roc():
     datadict = data_load()
     Xpd_train_scaled, ypd_train = datadict['Xpd_train_scaled'], datadict['ypd_train']
     auc_scores = {}
-    plt.figure(figsize=(10, 9))
+    plt.figure(figsize=(17, 9))
     feature_list = list(Xpd_train_scaled.columns[:9]) + list(Xpd_train_scaled.columns[-4:])
     for feature in feature_list:
         auc = roc_auc_score(ypd_train, Xpd_train_scaled[feature])
@@ -216,10 +227,11 @@ def feat_roc():
             fpr, tpr, _   = roc_curve(ypd_train, Xpd_train_scaled[feature])        
         plt.plot(fpr, tpr, label=f"{feature} (AUC = {auc_scores[feature]:.2f})", linewidth=2)
     plt.plot([0, 1], [0, 1], linestyle='--', color='gray')
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.title("ROC Curve: features")
-    plt.legend(fontsize=14, ncols=2)
+    plt.xlabel("False Positive Rate",fontsize=22)
+    plt.ylabel("True Positive Rate",fontsize=22)
+    plt.title("ROC Curve: features",fontsize=22)
+    #plt.legend(fontsize=14, ncols=2)
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5),fontsize=22)
     plt.grid(True)
     plt.tight_layout()
     filename = plotpath + '/AllFeatures_ROCs.pdf'
@@ -235,18 +247,26 @@ def feat_roc():
 
 
 @scripter
-def ebh_features():
+def ebh_vs_features():
     datadict = data_load()
-    Xpd_ebh_train_scaled, ypd_ebh_train = datadict['Xpd_ebh_train_scaled'], datadict['ypd_ebh_train']
-    feature_list = list(Xpd_ebh_train_scaled.columns[:9]) + list(Xpd_ebh_train_scaled.columns[-4:])
+    Xpd_ebh_train, ypd_ebh_train = datadict['Xpd_ebh_train'], datadict['ypd_ebh_train']
+    feature_list = list(Xpd_ebh_train.columns[:9]) + list(Xpd_ebh_train.columns[-4:])
     for feat in feature_list:
-        fig, ax = plt.subplots(figsize=(6, 5))  # Individual figure for each feature
-        h = ax.hist2d(np.squeeze(Xpd_ebh_train_scaled[feat]),np.squeeze(ypd_ebh_train),bins=50,cmap='viridis',norm=LogNorm())
-        plt.colorbar(h[3], ax=ax)
-        ax.set_xlabel(feat,fontsize=16)
-        ax.set_ylabel("EBH",fontsize=16)
-        ax.tick_params(axis='x', labelsize=14)
-        ax.tick_params(axis='y', labelsize=14)
+        fig, ax = plt.subplots(figsize=(8, 7))  # Individual figure for each feature
+        h = ax.hist2d(np.squeeze(Xpd_ebh_train[feat]),np.squeeze(ypd_ebh_train),bins=50,cmap='viridis',norm=LogNorm())
+        plt.colorbar(h[3], ax=ax, pad=0.1)
+        ax.set_xlabel(feat,fontsize=20)
+        ax.set_ylabel("EBH",fontsize=20)
+        ax.tick_params(axis='x', labelsize=16)
+        ax.tick_params(axis='y', labelsize=16)
+        ax1 = ax.twinx()
+        stable = Xpd_ebh_train[feat].values[ypd_ebh_train<=0.05]
+        unstable = Xpd_ebh_train[feat].values[ypd_ebh_train>0.05]
+        ax1.hist(stable,     bins=50,histtype='step',linewidth=2, label='stable',color='black')
+        ax1.hist(unstable,   bins=50,histtype='step',linewidth=2, label='unstable',color='blue')
+        ax1.set_ylabel('A.U.')
+        ax1.set_yscale('log')
+        ax1.legend()
         filename = plotpath + f"/{feat}.pdf"
         plt.savefig(filename, bbox_inches='tight')
         plt.close(fig)  # Free memory
@@ -269,20 +289,20 @@ def pdp_feat():
 
         fig, ax1 = plt.subplots(figsize=(6, 5))
         ax1.plot(x_vals, y_vals, color='blue', label='PDP')
-        ax1.set_ylabel('Avg Partial Dependence', color='blue', fontsize=10)
-        ax1.set_xlabel(feature_key, fontsize=10)
+        ax1.set_ylabel('Avg Partial Dependence', color='blue', fontsize=14)
+        ax1.set_xlabel(feature_key, fontsize=14)
         ax1.tick_params(axis='y')#, labelsize=5)
-        #ax1.set_yscale('log')
+        ax1.set_yscale('log')
 
         # Histogram on twin axis
         ax2 = ax1.twinx()
         ax2.hist(Xpd_train_scaled[feature_key], bins=30, color='gray', alpha=0.3)
-        ax2.set_ylabel('Frequency', color='gray', fontsize=10)
+        ax2.set_ylabel('Frequency', color='gray', fontsize=14)
         ax2.tick_params(axis='y', labelcolor='gray')#, labelsize=5)
-        #ax2.set_yscale('log')
+        ax2.set_yscale('log')
 
         fig.tight_layout()
-        fig.suptitle(f'PDP vs {feature_key}', fontsize=14)
+        #fig.suptitle(f'PDP vs {feature_key}', fontsize=18, x=0.5, y=1.0, ha='center')
 
         # Save individually
         filename = os.path.join(plotpath, f'pdp_{feature_key}.pdf')
@@ -291,7 +311,7 @@ def pdp_feat():
  
 
 @scripter
-def feat_importance():
+def xgb_featimportance():
     xgbmodel = joblib.load(modelpath + '/XGB_model.joblib')
     importance_dict = xgbmodel.get_booster().get_score(importance_type='gain')
     importance_df = pd.DataFrame(list(importance_dict.items()), columns=['raw_feature', 'importance'])
@@ -318,15 +338,15 @@ def feat_importance():
     logger.info(f"Saved {filename}")
 
 @scripter
-def corr_matrix():
+def xgb_corrmatrix():
     datadict = data_load()
     Xpd_train_scaled = datadict['Xpd_train_scaled']
 
     feature_list = list(Xpd_train_scaled.columns[:9]) + list(Xpd_train_scaled.columns[-4:]) # restricting features to plot all but compositions
     selected_df = Xpd_train_scaled[feature_list]
     corr_matrix = selected_df.corr() 
-    plt.figure(figsize=(15, 15))
-    sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, cbar_kws={"shrink": 0.75}, annot_kws={"size": 15})
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, cbar_kws={"shrink": 0.75}, annot_kws={"size": 10})
     plt.title("Feature Correlation Matrix")
     plt.xticks(rotation=90)
     plt.yticks(rotation=0)
@@ -427,12 +447,27 @@ def feat_permutate_importance():
     plt.close(fig)
 
 
-    '''shap.plots.beeswarm(shap_values[:, selected_indices],max_display=13)
-    shap_filename = os.path.join(plotpath, 'shap.pdf')
-    plt.savefig(shap_filename, bbox_inches='tight')  # Save it
-    logger.info(f"Saved {shap_filename}")
-    plt.close(fig)'''
+@scripter
+def uncertainty():
+    all_predictions = np.load(os.path.join(filepath,'uncertainty.npz'),allow_pickle=True)['arr_0']
+    mean_predictions = np.mean(all_predictions, axis=0)
+    std_predictions  = np.std(all_predictions, axis=0)
 
+    plt.figure(figsize=(7, 5))
+    plt.plot(mean_predictions,std_predictions,'.')
+    plt.axvline(x=0.5,linestyle='dashed',color='red',label='Decision Boundary')
+    plt.xlabel('Probability of Stability',fontsize=18)
+    plt.ylabel('Uncertainty',fontsize=18)
+    plt.title('Std vs. Mean Prediction',fontsize=18)
+    plt.legend(fontsize=14)
+    plt.grid(True)
+    plt.text(0.1,0.05,'High Confidence',color='black',fontweight='bold',fontsize=16)
+    plt.text(0.6,0.05,'High Confidence',color='black',fontweight='bold',fontsize=16)
+    plt.text(0.5,0.3,'High Uncertainty',color='red',fontweight='bold',fontsize=16)
+    plt.tight_layout()
+    plotname = os.path.join(plotpath,'Uncertainty_vs_Prediction.pdf')
+    plt.savefig(plotname)
+    logger.info(f"Plot saved: {plotname}")
 
 if __name__ == '__main__':
     #data_load()

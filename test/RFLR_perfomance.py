@@ -6,13 +6,13 @@ from sklearn.metrics import accuracy_score, f1_score, roc_curve, auc, roc_auc_sc
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-# Example: generate/load your dataset
-# Replace this with your actual data
 from sklearn.datasets import make_classification
+from collections import defaultdict
+
+from thermo_stability import utils
 import os, sys, argparse
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from collections import defaultdict
-from thermo_stability import config, utils
+import config
 
 scripter  = utils.Scripter()
 
@@ -29,11 +29,11 @@ y_val = data['y_val']
 
 parser = argparse.ArgumentParser(description="Hyperparameter tuning for DNN")
 # Add arguments
-parser.add_argument("--lr_c",           type=float,             nargs="+",  help="LR C values",         default=[1]) # [0.001, 0.01, 0.1, 1, 10, 100]
-parser.add_argument("--lr_maxiter",     type=int,               nargs="+",  help="LR maxiter",          default=[500]) # [200, 500, 1000, 2000]
-parser.add_argument("--rf_nest",        type=int,               nargs="+",  help="RF nest",             default=[200]) # [100,200, 500, 1000]
-parser.add_argument("--rf_maxdepth",    type=utils.none_or_int, nargs="+",  help="RF maxdepth",         default=[5]) # [None, 10, 20]
-parser.add_argument("--rf_minsampsplit",type=int,               nargs="+",  help="RF min_samp_split",   default=[2]) # [2, 5]
+parser.add_argument("--lr_c",           type=float,             nargs="+",  help="LR C values",         default=[1])    # [0.001, 0.01, 0.1, 1, 10]
+parser.add_argument("--lr_maxiter",     type=int,               nargs="+",  help="LR maxiter",          default=[500])  # [200, 500, 1000, 2000] --> need to check this values
+parser.add_argument("--rf_nest",        type=int,               nargs="+",  help="RF nest",             default=[200])  # [100, 200, 300, 400, 500]
+parser.add_argument("--rf_maxdepth",    type=utils.none_or_int, nargs="+",  help="RF maxdepth",         default=[5])    # [None, 10, 20]
+parser.add_argument("--rf_minsampsplit",type=int,               nargs="+",  help="RF min_samp_split",   default=[2])    # [2, 5]
 parser.add_argument("--script",         type=str,                           help="func to run")
 args = parser.parse_args()
 

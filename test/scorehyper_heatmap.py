@@ -1,15 +1,17 @@
-import re, os, sys, argparse
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from thermo_stability import utils, config
+
+from thermo_stability import utils
+import re, os, sys, argparse
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
 
 logpath = config.LOG_DIR
 plotpath = config.PLOT_DIR
-hyperpath = os.path.join(logpath,'dnn_f1score')
+hyperpath = os.path.join(logpath,'dnn_allmetrics')
 
 logger   = utils.setup_logging(name='heatmap',log_path=logpath + "/DNN_heatmap.txt")
 utils.set_matplotlib_fontsizes()
@@ -78,6 +80,6 @@ ax.set_title(f"Score Heatmap: NL={args.NL}, Metric:{args.metric.upper()}")
 plt.ylabel("Batch Size (BS)")
 plt.xlabel("Hidden Units (HU)")
 plt.tight_layout()
-filename = os.path.join(plotpath, 'heatmap_NL-' + args.NL + '_' + args.metric + '.pdf')
+filename = os.path.join(plotpath, 'heatmap_NL-' + args.NL + '_' + args.metric + '.png')
 plt.savefig(filename) 
 logger.info(f"Plot saved: {filename}")

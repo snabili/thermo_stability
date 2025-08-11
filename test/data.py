@@ -1,12 +1,12 @@
-import os,sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from thermo_stability import utils, config, processing
+from thermo_stability import utils, processing
+import os,sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
 
 
 filepath = config.FILE_DIR
