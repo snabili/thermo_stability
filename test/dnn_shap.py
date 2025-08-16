@@ -83,24 +83,35 @@ shap_values = explainer.shap_values(Xpd_test_scaled[:100].values)
 
 
 shap_values_2d = np.squeeze(shap_values)
+
+# column indices for the selected features
+selected_features = list(Xpd_test_scaled.columns[:9]) + list(Xpd_test_scaled.columns[-4:])
+selected_indices = [Xpd_test_scaled.columns.get_loc(col) for col in selected_features]
+
+# Get the mean SHAP values
 mean_shap = np.abs(shap_values_2d).mean(axis=0)
-#top_indices = np.argsort(mean_shap)[-15:]  # top 15 features
-top_indices = list(Xpd_test_scaled.columns[:9]) + list(Xpd_test_scaled.columns[-4:])
-l = list(range(9)) + list(range(-4,0,1))
-#feat_imporname = [Xpd_train_scaled[i] for i in top_indices]
-feat_imporname = top_indices
-shap.summary_plot(shap_values_2d[:, l], Xpd_test_scaled[top_indices][:100].values,feature_names=feat_imporname,show=False)#,label=Xpd_train_scaled.columns[top_indices])
-impfeat_filename = os.path.join(plotpath,'dnn_shap.pdf')
-plt.savefig(impfeat_filename)
+selected_shap_values = mean_shap[selected_indices]
+
+# Create labeled feature names with SHAP values
+feat_imporname = [f"{selected_features[i]}: {selected_shap_values[i]:.3f}" for i in range(len(selected_features))]
+
+# Plot feature importance
+shap.summary_plot(shap_values_2d[:, selected_indices], 
+                  Xpd_test_scaled[selected_features][:100].values, 
+                  plot_type='bar', 
+                  feature_names=feat_imporname,
+                  show=False)
+plt.tight_layout()
+plt.xscale('log')
+featimpor_filename = os.path.join(plotpath,'dnn_impfeat.pdf')
+plt.savefig(featimpor_filename)
 plt.close()
 
-#feat_imporname = [f"{Xpd_train_scaled[j]}: {mean_shap[i]:.3f}" for i,j in enumerate(top_indices)]
-feat_imporname = [f"{top_indices[i]}: {mean_shap[i]:.3f}" for i in range(len(top_indices))]
-
-sorted_values = mean_shap[l]
-#feat_imporname = top_indices
-shap.summary_plot(shap_values_2d[:, l], Xpd_test_scaled[top_indices][:100].values, plot_type='bar',feature_names=feat_imporname,show=False)
-plt.tight_layout()
-shap_filename = os.path.join(plotpath,'dnn_impfeat.pdf')
+# Plot SHAP
+shap.summary_plot(shap_values_2d[:, selected_indices], 
+		Xpd_test_scaled[selected_features][:100].values,
+		feature_names=feat_imporname,
+		show=False)
+shap_filename = os.path.join(plotpath,'dnn_shap.pdf')
 plt.savefig(shap_filename)
 plt.close()
